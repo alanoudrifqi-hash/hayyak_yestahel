@@ -1,0 +1,383 @@
+/* =====================================================================
+   base.css — التنسيق العام: الخلفية، الأزرار، البطاقات، الشريط العلوي،
+   الانتقال بين الشاشات، وحماية وضع المعرض (Kiosk)
+   ===================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;              /* شاشة واحدة ثابتة — لا تمرير */
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--c-white);
+  background-color: var(--c-navy);
+  /* تدرج من #0f1543 (أسفل) إلى #2f2447 (أعلى) مع عمق #020624 في الحواف */
+  background-image:
+    radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(2, 6, 36, 0.92) 100%),
+    linear-gradient(to top, var(--c-navy) 0%, var(--c-plum) 100%);
+  background-attachment: fixed;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+
+  /* ---------- حماية وضع المعرض ---------- */
+  -webkit-user-select: none;
+  user-select: none;              /* منع تحديد النص */
+  -webkit-touch-callout: none;    /* منع قائمة الضغط المطوّل */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;     /* منع التكبير بالضغط المزدوج */
+}
+
+[hidden] { display: none !important; }
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+  display: block;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.en {
+  font-family: var(--font-en);
+  direction: ltr;
+  unicode-bidi: isolate;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- خلفية المدينة الحية (canvas) ---------- */
+#city {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.4;
+  transition: opacity 900ms var(--ease-soft);
+  pointer-events: none;
+}
+body[data-screen="welcome"] #city,
+body[data-screen="end"] #city { opacity: 1; }
+
+/* ---------- الشريط العلوي: الشعار + التقدم ---------- */
+.topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--topbar-h);
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  z-index: 20;
+}
+
+/* =====================================================================
+   الشعار — حسب دليل رواد V2:
+   أبيض دائماً على الداكن، بلا إطار ولا ظل ولا تدوير ولا تمديد
+   (العرض تلقائي من الارتفاع فتبقى النسبة الأصلية)، وبشفافية كاملة.
+   ===================================================================== */
+[data-logo] {
+  display: block;
+  width: auto;
+  max-width: none;
+  flex: none;
+  object-fit: contain;
+  filter: none;
+  box-shadow: none;
+  border: 0;
+}
+
+/* الشعار الصغير في الهيدر الثابت */
+.brand {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: var(--touch);
+  transition: opacity var(--t-screen) var(--ease), visibility 0s;
+}
+.brand__logo { height: clamp(34px, 4.2vh, 50px); }
+/* في الترحيب والختام الشعار كبير في المنتصف — لا نكرره في الهيدر */
+body[data-screen="welcome"] .brand,
+body[data-screen="end"] .brand {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--t-screen) var(--ease), visibility 0s var(--t-screen);
+}
+
+/* مكان الشعار إذا ما وُجد الملف */
+.brand__text {
+  color: #fff;
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: clamp(20px, 1.9vw, 30px);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* شريط التقدم — 5 نقاط من الشاشة 2 */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  direction: rtl;
+  transition: opacity var(--t-screen) var(--ease);
+}
+body[data-screen="welcome"] .progress { opacity: 0; }
+.progress__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-violet);
+  transition: width 400ms var(--ease), background-color 400ms var(--ease), box-shadow 400ms var(--ease);
+}
+.progress__dot.is-done { background: var(--c-steel); }
+.progress__dot.is-current {
+  width: 34px;
+  border-radius: 6px;
+  background: var(--c-glow);
+  box-shadow: 0 0 14px var(--glow-soft);
+}
+
+/* ---------- الشاشات ---------- */
+.screens {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  padding: var(--topbar-h) var(--gutter) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-28px);   /* الدخول من اليسار (اتجاه التقدم في RTL) */
+  transition:
+    opacity var(--t-screen) var(--ease),
+    transform var(--t-screen) var(--ease),
+    visibility 0s linear var(--t-screen);
+}
+.screen.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity var(--t-screen) var(--ease),
+    transform var(--t-screen) var(--ease),
+    visibility 0s;
+}
+.screen.is-leaving { transform: translateX(28px); }
+
+/* ترويسة الشاشة: عنوان عربي + سطر إنجليزي */
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: clamp(16px, 2.6vh, 32px);
+  flex: none;
+}
+.head__title {
+  margin: 0;
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: var(--fs-h1);
+  line-height: 1.25;
+}
+.head__en {
+  margin: 4px 0 0;
+  color: var(--c-mist);
+  font-size: var(--fs-en);
+  opacity: 0.85;
+}
+
+/* ---------- الأزرار ---------- */
+.btn {
+  min-height: var(--touch);
+  padding: 0 clamp(28px, 2.6vw, 44px);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: var(--fs-body);
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 160ms var(--ease), background-color 200ms var(--ease), box-shadow 200ms var(--ease), opacity 200ms;
+}
+.btn:active { transform: scale(0.96); }
+.btn svg { width: 1.1em; height: 1.1em; flex: none; }
+
+.btn--primary {
+  background: var(--c-glow);
+  color: var(--c-navy);
+  box-shadow: 0 0 0 1px rgba(212, 218, 250, 0.6), 0 10px 40px rgba(88, 112, 156, 0.45);
+}
+.btn--ghost {
+  background: rgba(15, 21, 67, 0.55);
+  color: var(--c-white);
+  box-shadow: inset 0 0 0 1.5px var(--c-steel);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.btn--ghost:active { background: var(--steel-soft); }
+.btn--small {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 24px;
+  font-size: var(--fs-small);
+}
+
+/* ---------- البطاقات الزجاجية ---------- */
+.glass {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+/* ---------- بطاقة «الصورة قيد التجهيز» ---------- */
+.pending {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: var(--c-mist);
+  font-family: var(--font-ar);
+  font-size: var(--fs-small);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(88, 112, 156, 0.16) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(88, 112, 156, 0.16) 39px 40px),
+    linear-gradient(to top, var(--c-navy), var(--c-plum));
+}
+.pending svg { width: 44px; height: 44px; opacity: 0.8; }
+/* نسخة شفافة فوق صورة «قبل» */
+.pending--over {
+  background: rgba(15, 21, 67, 0.62);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  color: var(--c-white);
+  font-size: var(--fs-body);
+}
+
+/* ---------- تنبيه الخمول ---------- */
+.idle {
+  position: fixed;
+  left: 50%;
+  bottom: var(--sp-5);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 14px 14px 14px 32px;
+  padding-inline-start: 32px;
+  padding-inline-end: 14px;
+  transform: translate(-50%, 30px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 400ms var(--ease), transform 400ms var(--ease), visibility 0s 400ms;
+  box-shadow: 0 20px 60px rgba(2, 6, 36, 0.6);
+}
+.idle.is-shown {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 400ms var(--ease), transform 400ms var(--ease), visibility 0s;
+}
+.idle__text {
+  font-family: var(--font-ar);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+}
+.idle__count {
+  color: var(--c-mist);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- لوحة المتطوع ---------- */
+.admin {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 6, 36, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 300ms var(--ease), visibility 0s 300ms;
+}
+.admin.is-shown {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms var(--ease), visibility 0s;
+}
+.admin__panel {
+  width: min(560px, 90vw);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.admin__title {
+  margin: 0;
+  font-family: var(--font-ar);
+  font-size: var(--fs-h2);
+}
+.admin__stats {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+}
+.admin__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--card-border);
+}
+.admin__row dt { color: var(--c-mist); font-size: var(--fs-small); }
+.admin__row dd { margin: 0; font-weight: 700; font-size: var(--fs-body); text-align: left; }
+.admin__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  color: var(--c-mist);
+  font-size: var(--fs-small);
+}
+.admin__list li { display: flex; justify-content: space-between; gap: var(--sp-2); }
+.admin__list b { color: var(--c-white); font-variant-numeric: tabular-nums; }
+.admin__actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
+.btn--danger { box-shadow: inset 0 0 0 1.5px var(--c-mist); }
+.btn--danger.is-armed { background: var(--c-glow); color: var(--c-navy); }
+
+/* تقليل الحركة لمن يفضّل ذلك */
+@media (prefers-reduced-motion: reduce) {
+  .screen, .screen.is-active { transition-duration: 1ms; }
+}

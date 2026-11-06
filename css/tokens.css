@@ -1,0 +1,74 @@
+/* =====================================================================
+   tokens.css — الألوان والخطوط والمسافات (دليل رواد V2)
+   لا تستخدم ألوان خارج هذه القائمة.
+   ===================================================================== */
+
+/* خط Gilroy للإنجليزي — إذا ما وُجدت الملفات في assets/fonts يُستخدم Outfit تلقائياً */
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../assets/fonts/Gilroy-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F;
+}
+@font-face {
+  font-family: 'Gilroy';
+  src: url('../assets/fonts/Gilroy-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F;
+}
+
+:root {
+  /* ---------- لوحة الألوان ---------- */
+  --c-abyss:   #020624;  /* الحواف */
+  --c-navy:    #0f1543;  /* أسفل الخلفية + البطاقات */
+  --c-plum:    #2f2447;  /* أعلى الخلفية */
+  --c-violet:  #4a3b68;  /* حدود البطاقات */
+  --c-steel:   #58709c;  /* اللون التفاعلي */
+  --c-mist:    #b7cddd;  /* النصوص الثانوية */
+  --c-glow:    #d4dafa;  /* التوهج */
+  --c-white:   #f6f9fc;  /* النصوص الأساسية */
+
+  /* ---------- مشتقات (نفس الألوان بشفافية) ---------- */
+  --card-bg:      rgba(15, 21, 67, 0.55);
+  --card-border:  rgba(74, 59, 104, 0.9);
+  --glow-soft:    rgba(212, 218, 250, 0.35);
+  --glow-faint:   rgba(212, 218, 250, 0.12);
+  --steel-soft:   rgba(88, 112, 156, 0.35);
+
+  /* ---------- الخطوط ---------- */
+  --font-ar: 'Noto Naskh Arabic', 'Droid Arabic Naskh', serif;
+  --font-en: 'Gilroy', 'Outfit', system-ui, sans-serif;
+  /* الحروف اللاتينية تأخذ Gilroy/Outfit، والعربية تنزل لـ Noto Naskh */
+  --font: 'Gilroy', 'Outfit', 'Noto Naskh Arabic', 'Droid Arabic Naskh', sans-serif;
+
+  /* أحجام النص — تكبر مع الشاشات الأكبر من الآيباد */
+  --fs-hero:  clamp(56px, 6.4vw, 104px);
+  --fs-h1:    clamp(38px, 3.6vw, 60px);
+  --fs-h2:    clamp(26px, 2.3vw, 38px);
+  --fs-body:  clamp(20px, 1.75vw, 28px);
+  --fs-small: clamp(16px, 1.35vw, 22px);
+  --fs-en:    clamp(16px, 1.45vw, 24px);
+
+  /* ---------- المسافات ---------- */
+  --sp-1: 8px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 32px;
+  --sp-5: 48px;
+  --sp-6: 64px;
+
+  --gutter: clamp(28px, 3.4vw, 64px);
+  --topbar-h: clamp(76px, 8.5vh, 110px);
+
+  /* ---------- اللمس ---------- */
+  --touch: 64px;   /* أقل ارتفاع لأي زر */
+
+  /* ---------- الزوايا والحركة ---------- */
+  --radius:    22px;
+  --radius-sm: 14px;
+  --ease:      cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.45, 0, 0.2, 1);
+  --t-screen:  400ms;
+}

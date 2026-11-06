@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <!-- منع التكبير بالأصابع — تجربة معرض -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>حيّك يستاهل | Your Neighborhood Deserves</title>
+  <meta name="description" content="تجربة تفاعلية: الذكاء الاصطناعي يشتغل كمخطط مدن ويقترح حلول لشوارع الطائف.">
+
+  <!-- تشغيل بملء الشاشة من الشاشة الرئيسية في الآيباد -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f1543">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="حيّك يستاهل">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+
+  <!-- الخطوط: Noto Naskh Arabic للعربي، و Outfit بديل Gilroy للإنجليزي -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Outfit:wght@400;700&display=swap">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body data-screen="welcome">
+
+  <!-- خلفية المدينة الحية -->
+  <canvas id="city" aria-hidden="true"></canvas>
+
+  <!-- ===== الهيدر الثابت: الشعار النصي الصغير + التقدم =====
+       ثابت خارج الشاشات — ما يتحرك مع الانتقال، المحتوى تحته هو اللي يتبدل.
+       يختفي في الترحيب والختام لأن الشعار هناك كبير في المنتصف. -->
+  <header class="topbar">
+    <!-- لمس أي شعار 5 مرات يفتح لوحة المتطوع -->
+    <div class="brand logo-tap">
+      <img class="brand__logo" data-logo="wordmark" alt="رواد الذكاء الاصطناعي">
+    </div>
+
+    <div class="progress" id="progress" aria-hidden="true">
+      <span class="progress__dot"></span>
+      <span class="progress__dot"></span>
+      <span class="progress__dot"></span>
+      <span class="progress__dot"></span>
+      <span class="progress__dot"></span>
+    </div>
+  </header>
+
+  <main class="screens">
+
+    <!-- ========== [1] الترحيب ========== -->
+    <section class="screen welcome is-active" data-screen="welcome">
+      <!-- الشعار النصي الكبير: نقاط الرمز تظهر وحدة ورا الثانية ثم النص -->
+      <div class="hero-logo logo-tap" id="heroLogo">
+        <img class="hero-logo__img" data-logo="wordmark" alt="رواد الذكاء الاصطناعي">
+        <canvas class="hero-logo__canvas" aria-hidden="true"></canvas>
+      </div>
+      <h1 class="welcome__title">حيّك يستاهل</h1>
+      <p class="welcome__en en">Your Neighborhood Deserves</p>
+      <p class="welcome__q">لو تقدر تغيّر شيء في حيّك، وش بيكون؟</p>
+
+      <ol class="steps">
+        <li class="steps__item">
+          <span class="steps__icon" data-icon="pin"></span>
+          <span>اختار المكان</span>
+        </li>
+        <li aria-hidden="true"><svg class="steps__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></li>
+        <li class="steps__item">
+          <span class="steps__icon" data-icon="scan"></span>
+          <span>الذكاء الاصطناعي يحلل</span>
+        </li>
+        <li aria-hidden="true"><svg class="steps__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></li>
+        <li class="steps__item">
+          <span class="steps__icon" data-icon="spark"></span>
+          <span>اختار الحل</span>
+        </li>
+      </ol>
+
+      <button class="btn btn--primary btn--start" data-action="start">ابدأ التجربة</button>
+    </section>
+
+    <!-- ========== [2] اختيار الصورة ========== -->
+    <section class="screen choose" data-screen="choose">
+      <div class="head">
+        <div>
+          <h2 class="head__title">اختار المكان اللي تبي تحسّنه</h2>
+          <p class="head__en en">Choose a place to improve</p>
+        </div>
+        <button class="btn btn--ghost btn--small" data-action="back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          رجوع
+        </button>
+      </div>
+      <!-- البطاقات تُبنى تلقائياً من data.js -->
+      <div class="places" id="places"></div>
+    </section>
+
+    <!-- ========== [3] الذكاء الاصطناعي يحلل الصورة ========== -->
+    <section class="screen analyze" data-screen="analyze">
+      <div class="head">
+        <div>
+          <h2 class="head__title" id="analyzeTitle">&nbsp;</h2>
+          <p class="head__en en">AI urban analysis</p>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="frame" id="analyzeFrame">
+          <img class="frame__img" alt="">
+          <div class="measure"></div>
+          <div class="scan"></div>
+          <div class="hud en" id="hud"></div>
+        </div>
+      </div>
+      <div class="status">
+        <!-- رمز رواد ينبض بهدوء أثناء التحليل -->
+        <span class="status__emblem" aria-hidden="true">
+          <span class="status__halo"></span>
+          <img class="status__emblem-img" data-logo="emblem" alt="">
+        </span>
+        <span class="status__text" id="statusText">أقرأ تفاصيل الشارع...</span>
+      </div>
+      <div class="meter"><div class="meter__fill" id="meterFill"></div></div>
+    </section>
+
+    <!-- ========== [4] المشاكل والحلول ========== -->
+    <section class="screen solutions" data-screen="solutions">
+      <div class="head">
+        <div>
+          <h2 class="head__title">لاحظت مشكلتين... وعندي لكل وحدة حل</h2>
+          <p class="head__en en">Two problems spotted — one solution for each</p>
+        </div>
+      </div>
+      <div class="sol">
+        <!-- البطاقتين تُبنى من app.js -->
+        <article class="sol-card glass" data-idx="0"></article>
+        <article class="sol-card glass" data-idx="1"></article>
+        <aside class="sol-side">
+          <div class="stage">
+            <div class="frame" id="thumbFrame"><img class="frame__img" alt=""></div>
+          </div>
+          <p class="sol-side__caption" id="thumbCaption"></p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ========== [5] قبل وبعد ========== -->
+    <section class="screen compare" data-screen="compare">
+      <div class="stage">
+        <div class="frame cmp" id="cmp">
+          <div class="cmp__after"><img class="frame__img" alt="بعد"></div>
+          <div class="cmp__before"><img class="frame__img" alt="قبل"></div>
+          <div class="cmp__line"><div class="cmp__handle" data-icon="drag"></div></div>
+          <span class="cmp__tag cmp__tag--before">قبل</span>
+          <span class="cmp__tag cmp__tag--after">بعد</span>
+        </div>
+      </div>
+      <p class="cmp-summary" id="cmpSummary"></p>
+      <div class="actions">
+        <button class="btn btn--ghost" data-action="other-solution">جرّب الحل الثاني</button>
+        <button class="btn btn--ghost" data-action="other-place">جرّب مكان ثاني</button>
+        <button class="btn btn--primary" data-action="finish">خلصت</button>
+      </div>
+    </section>
+
+    <!-- ========== [6] الختام ========== -->
+    <section class="screen end" data-screen="end">
+      <div class="end__logo logo-tap">
+        <img class="end__logo-img" data-logo="wordmark" alt="رواد الذكاء الاصطناعي">
+      </div>
+      <h2 class="end__msg">الذكاء الاصطناعي ما يبني المدن... بس يساعدنا نتخيّلها</h2>
+      <p class="end__en en">AI doesn’t build cities — it helps us imagine them</p>
+      <p class="end__sub">شكراً لأنك تخيّلت حيّك أجمل</p>
+      <div class="ring" id="ring">
+        <svg viewBox="0 0 64 64" fill="none" stroke-width="4">
+          <circle class="ring__track" cx="32" cy="32" r="28"/>
+          <circle class="ring__bar" cx="32" cy="32" r="28"/>
+        </svg>
+        <span id="ringNum">10</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== تنبيه الخمول ===== -->
+  <div class="idle glass" id="idle" role="alertdialog" aria-live="polite">
+    <span class="idle__text">لسه معنا؟</span>
+    <span class="idle__count" id="idleCount"></span>
+    <button class="btn btn--primary btn--small" data-action="stay">إيه، كمّل</button>
+  </div>
+
+  <!-- ===== لوحة المتطوع (لمس الشعار 5 مرات) ===== -->
+  <div class="admin" id="admin">
+    <div class="admin__panel glass">
+      <h3 class="admin__title">لوحة المتطوع</h3>
+      <dl class="admin__stats">
+        <div class="admin__row"><dt>عدد التجارب</dt><dd id="statSessions">0</dd></div>
+        <div class="admin__row"><dt>أكثر حل انختار</dt><dd id="statTop">—</dd></div>
+      </dl>
+      <ol class="admin__list" id="statList"></ol>
+      <div class="admin__actions">
+        <button class="btn btn--ghost btn--small btn--danger" data-action="reset-stats">تصفير</button>
+        <button class="btn btn--primary btn--small" data-action="close-admin">قفل</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
