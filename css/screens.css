@@ -625,6 +625,33 @@
   flex-wrap: wrap;
 }
 
+/* صورة طولية: السلايدر في عمود، والملخص والأزرار في العمود الثاني */
+.compare.is-portrait {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: 1fr auto auto 1fr;
+  column-gap: var(--sp-5);
+  padding-bottom: var(--sp-4);
+}
+.compare.is-portrait .stage {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  padding: 0;
+}
+.compare.is-portrait .cmp-summary {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0 0 var(--sp-4);
+  text-align: start;
+}
+.compare.is-portrait .actions {
+  grid-column: 2;
+  grid-row: 3;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 420px;
+}
+
 /* =========================================================
    [6] الختام
    ========================================================= */

@@ -41,7 +41,11 @@
     steps:   '<path d="M3 20h5v-4h5v-4h5V8h3"/>',
     bench:   '<path d="M4 10h16M4 14h16M6 14v5M18 14v5M6 10V7M18 10V7"/>',
     tree:    '<path d="M12 21v-6"/><path d="M12 3c3.3 0 6 2.6 6 5.8 0 3.3-2.7 6.2-6 6.2s-6-2.9-6-6.2C6 5.6 8.7 3 12 3z"/><path d="M8 21h8"/>',
-    path:    '<path d="M8 3L5 21M16 3l3 18M12 4v2M12 10v3M12 17v3"/>'
+    path:    '<path d="M8 3L5 21M16 3l3 18M12 4v2M12 10v3M12 17v3"/>',
+    flower:  '<circle cx="12" cy="9" r="2.2"/><path d="M12 6.8c0-2.2 1-3.8 2.6-3.8 1.4 0 2.2 1.2 1.8 2.6M14.2 9c2.2 0 3.8 1 3.8 2.6 0 1.4-1.2 2.2-2.6 1.8M12 11.2c0 2.2-1 3.8-2.6 3.8-1.4 0-2.2-1.2-1.8-2.6M9.8 9C7.6 9 6 8 6 6.4 6 5 7.2 4.2 8.6 4.6"/><path d="M12 11.2V21M12 17c-2-.3-3.5-1.4-4-3M12 18.5c1.8-.2 3.2-1.2 3.8-2.8"/>',
+    drop:    '<path d="M12 3s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11z"/><path d="M9 14.5a3 3 0 0 0 3 3"/>',
+    paint:   '<path d="M4 4h12v5H4z"/><path d="M16 6.5h3v5l-7 1.5v3"/><rect x="10.5" y="16" width="3" height="5" rx="1"/>',
+    crossing:'<path d="M3 20h18M3 4h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/>'
   };
   const icon = (name) =>
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.spark}</svg>`;
@@ -124,7 +128,7 @@
     b.style.top = y + '%';
     b.style.width = w + '%';
     b.style.height = h + '%';
-    b.innerHTML = `<span class="box__label"><span class="en">0${i + 1}</span>${pr.tag || 'رصد'}</span>`;
+    b.innerHTML = `<span class="box__label"><span class="en">0${i + 1}</span>${pr.tag || 'مشكلة'}</span>`;
     return b;
   }
 
@@ -537,7 +541,10 @@
     const apply = async () => {
       const [bi, ai] = await Promise.all([probe(p.image), probe(pr.after)]);
       const ref = bi.ok ? bi : (ai.ok ? ai : null);
-      cmp.style.setProperty('--ar', ref ? (ref.w / ref.h).toFixed(4) : '1.5');
+      const ar = ref ? ref.w / ref.h : 1.5;
+      cmp.style.setProperty('--ar', ar.toFixed(4));
+      // صورة طولية (مثل 06): السلايدر بجنب والملخص والأزرار بجنب، بدل مساحة فاضية
+      $('.screen.compare').classList.toggle('is-portrait', ar < 0.95);
       paintLayer(beforeW, bi.ok ? p.image : null, false);
       // صورة «بعد» ناقصة ← نعرض «قبل» مع طبقة شفافة ونص
       if (ai.ok) paintLayer(afterW, pr.after, false);
