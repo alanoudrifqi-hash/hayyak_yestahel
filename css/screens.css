@@ -550,7 +550,30 @@
 /* =========================================================
    [5] قبل وبعد
    ========================================================= */
-.compare .stage { padding: 0 2%; }
+/* تصميم واحد لكل الأماكن: السلايدر يمين (نص الشاشة تقريباً، بكامل الارتفاع)،
+   والنص والأزرار يسار ومتمركزة عمودياً. ترتيب الأعمدة في RTL: الأول = اليمين */
+.compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: clamp(28px, 3.4vw, 56px);
+  padding-bottom: var(--sp-4);
+}
+.compare .stage {
+  grid-column: 1;
+  grid-row: 1;
+  display: block;
+  height: 100%;
+  padding: 0;
+}
+/* الإطار ياخذ العمود كامل، والصورة داخله كاملة بنسبتها الأصلية (contain)
+   على خلفية داكنة — «قبل» و«بعد» بنفس المقاس فتنطبق فوق بعض تماماً */
+.compare .cmp {
+  width: 100%;
+  height: 100%;
+  background: var(--c-abyss);
+}
+.compare .cmp .frame__img { object-fit: contain; }
 .cmp {
   touch-action: none;   /* السحب بالإصبع بدون تمرير الصفحة */
   cursor: ew-resize;
@@ -621,10 +644,20 @@
 .cmp__tag--before { right: 18px; }
 .cmp__tag--after  { left: 18px; }
 
+/* العمود اليسار: متمركز عمودياً مع السلايدر */
+.cmp-side {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+  max-width: 480px;
+}
 .cmp-summary {
-  flex: none;
-  margin: clamp(14px, 2.2vh, 26px) 0 clamp(12px, 2vh, 22px);
-  text-align: center;
+  margin: 0;
+  text-align: start;
   font-family: var(--font-ar);
   font-weight: 700;
   font-size: var(--fs-h1);
@@ -634,47 +667,21 @@
 .cmp-summary.is-swapping { opacity: 0; transform: translateY(10px); }
 .cmp-summary small {
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 8px;
   color: var(--c-mist);
   font-size: var(--fs-small);
   font-weight: 400;
+  line-height: 1.6;
 }
 
+/* الأزرار الثلاثة فوق بعض بنفس العرض */
 .actions {
-  flex: none;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-}
-
-/* صورة طولية: السلايدر في عمود، والملخص والأزرار في العمود الثاني */
-.compare.is-portrait {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: 1fr auto auto 1fr;
-  column-gap: var(--sp-5);
-  padding-bottom: var(--sp-4);
-}
-.compare.is-portrait .stage {
-  grid-column: 1;
-  grid-row: 1 / -1;
-  padding: 0;
-}
-.compare.is-portrait .cmp-summary {
-  grid-column: 2;
-  grid-row: 2;
-  margin: 0 0 var(--sp-4);
-  text-align: start;
-}
-.compare.is-portrait .actions {
-  grid-column: 2;
-  grid-row: 3;
   flex-direction: column;
   align-items: stretch;
-  max-width: 420px;
+  gap: var(--sp-2);
 }
+.actions .btn { width: 100%; }
 
 /* =========================================================
    [6] الختام

@@ -593,12 +593,8 @@
     const summary = $('#cmpSummary');
 
     const apply = async () => {
+      // تصميم واحد لكل الصور: الإطار ثابت يمين، والصورة داخله كاملة (contain)
       const [bi, ai] = await Promise.all([probe(p.image), probe(pr.after)]);
-      const ref = bi.ok ? bi : (ai.ok ? ai : null);
-      const ar = ref ? ref.w / ref.h : 1.5;
-      cmp.style.setProperty('--ar', ar.toFixed(4));
-      // صورة طولية (مثل 06): السلايدر بجنب والملخص والأزرار بجنب، بدل مساحة فاضية
-      $('.screen.compare').classList.toggle('is-portrait', ar < 0.95);
       paintLayer(beforeW, bi.ok ? p.image : null, false);
       // صورة «بعد» ناقصة ← نعرض «قبل» مع طبقة شفافة ونص
       if (ai.ok) paintLayer(afterW, pr.after, false);
