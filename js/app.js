@@ -122,15 +122,58 @@
   function makeBox(pr, i) {
     const b = document.createElement('div');
     const { x, y, w, h } = pr.box;
-    b.className = 'box' + (y < 12 ? ' box--label-in' : '');
+    b.className = 'box';
     b.dataset.idx = i;
     b.style.left = x + '%';
     b.style.top = y + '%';
     b.style.width = w + '%';
     b.style.height = h + '%';
-    b.innerHTML = `<span class="box__label"><span class="en">0${i + 1}</span>${pr.tag || 'مشكلة'}</span>`;
+    b.innerHTML = `<span class="box__label"><span class="en">0${i + 1}</span>${pr.label || 'مشكلة'}</span>`;
     return b;
   }
+
+  /* يختار مكان اسم المشكلة لكل مربع:
+     - دايماً برا المربع (فوقه أو تحته) عشان ما يغطي المشكلة نفسها
+     - داخل حدود الصورة
+     - وما يغطي مربع ثاني ولا اسم ثاني
+     يجرّب: فوق-يمين، فوق-يسار، تحت-يمين، تحت-يسار، وياخذ أول مكان نظيف
+     (وإذا ما فيه مكان نظيف، ياخذ الأقل تغطية). */
+  function fitLabels(frame) {
+    const W = frame.clientWidth, H = frame.clientHeight, M = 6, G = 8;
+    if (!W) return;
+    const boxes = $$('.box', frame);
+    const rect = (b) => ({ l: b.offsetLeft, t: b.offsetTop, r: b.offsetLeft + b.offsetWidth, b: b.offsetTop + b.offsetHeight });
+    const area = (a, c) => Math.max(0, Math.min(a.r, c.r) - Math.max(a.l, c.l)) * Math.max(0, Math.min(a.b, c.b) - Math.max(a.t, c.t));
+    const boxRects = boxes.map(rect);
+    const placed = [];
+
+    boxes.forEach((b, i) => {
+      const l = $('.box__label', b);
+      if (!l) return;
+      Object.assign(l.style, { left: '', right: '', top: '', bottom: '', transform: '' });
+      const w = l.offsetWidth, h = l.offsetHeight, B = boxRects[i];
+      const clampX = (x) => Math.min(Math.max(x, M), W - M - w);
+      const candidates = [
+        { x: B.r - w + 2, y: B.t - G - h },  // فوق، محاذي ليمين المربع
+        { x: B.l - 2,     y: B.t - G - h },  // فوق، محاذي ليسار المربع
+        { x: B.r - w + 2, y: B.b + G },      // تحت، يمين
+        { x: B.l - 2,     y: B.b + G }       // تحت، يسار
+      ].map((c) => ({ x: clampX(c.x), y: c.y }))
+       .filter((c) => c.y >= M && c.y + h <= H - M);
+
+      let best = null;
+      candidates.forEach((c) => {
+        const L = { l: c.x, t: c.y, r: c.x + w, b: c.y + h };
+        const cost = boxRects.reduce((s, R) => s + area(L, R), 0) + placed.reduce((s, P) => s + area(L, P), 0);
+        if (!best || cost < best.cost) best = { ...c, cost, L };
+      });
+      if (!best) return; // ما فيه مكان أبداً ← يبقى مكانه الافتراضي
+      Object.assign(l.style, { left: (best.x - B.l) + 'px', top: (best.y - B.t) + 'px', right: 'auto', bottom: 'auto' });
+      placed.push(best.L);
+    });
+  }
+  const fitAllLabels = () => $$('.frame').forEach((f) => { if ($('.box', f)) fitLabels(f); });
+  window.addEventListener('resize', fitAllLabels);
 
   /* =====================================================================
      التنقل بين الشاشات
@@ -155,7 +198,11 @@
     document.body.dataset.screen = name;
 
     if (enter[name]) enter[name]();
-    requestAnimationFrame(() => to.classList.add('is-active'));
+    // قراءة offsetWidth تثبّت الحالة الأولى للشاشة، فتشتغل حركة الدخول
+    // مباشرة بدون انتظار إطار (أضمن من requestAnimationFrame اللي ممكن يتأخر
+    // ويخلي شاشتين ظاهرة فوق بعض)
+    void to.offsetWidth;
+    to.classList.add('is-active');
 
     updateProgress();
     resetIdle();
@@ -372,12 +419,11 @@
   /* =====================================================================
      [3] الذكاء الاصطناعي يحلل الصورة
      ===================================================================== */
-  const STATUSES = [
-    'أقرأ تفاصيل الشارع...',
-    'أدوّر على المشاكل...',
-    'أفكر زي مخطط المدن...',
-    'أجهّز الحلول...'
-  ];
+  /* نصوص الحالة بالترتيب. بين «أدوّر» و«أفكر» يظهر مربع لكل مشكلة،
+     ومعه يتغير النص إلى «رصدت: [اسم المشكلة]» */
+  const STATUS_START = 'أقرأ تفاصيل الشارع...';
+  const STATUS_END = ['أفكر زي مخطط المدن...', 'أجهّز الحلول...'];
+  const statusFound = (label) => `رصدت: ${label}`;
 
   function setStatus(text, instant) {
     const el = $('#statusText');
@@ -394,18 +440,23 @@
     $('#analyzeTitle').textContent = `${p.title} · ${p.district}`;
     frame.classList.remove('is-scanning');
     $$('.box', frame).forEach((b) => b.remove());
-    fillFrame(frame, p.image);
     const boxes = p.problems.map((pr, i) => frame.appendChild(makeBox(pr, i)));
+    fillFrame(frame, p.image).then(() => fitLabels(frame));
 
-    // نصوص الحالة
-    const step = T.analysis / STATUSES.length;
-    setStatus(STATUSES[0], true);
-    STATUSES.forEach((s, i) => { if (i) later(() => setStatus(s), step * i); });
-
-    // المسح + مربعات الرصد واحد ورا الثاني
+    // الخط الزمني (نسب من مدة التحليل):
+    // قراءة ← رصد المشكلة 1 ← رصد المشكلة 2 ← تفكير ← تجهيز الحلول
+    const at = (f) => Math.round(T.analysis * f);
+    setStatus(STATUS_START, true);
     later(() => frame.classList.add('is-scanning'), 250);
-    later(() => boxes[0] && boxes[0].classList.add('is-on'), step + 150);
-    later(() => boxes[1] && boxes[1].classList.add('is-on'), step + 1150);
+    p.problems.forEach((pr, i) => {
+      const t = at(0.24 + i * 0.22);
+      later(() => {
+        boxes[i].classList.add('is-on');
+        setStatus(statusFound(pr.label || `مشكلة 0${i + 1}`));
+      }, t);
+    });
+    later(() => setStatus(STATUS_END[0]), at(0.68));
+    later(() => setStatus(STATUS_END[1]), at(0.86));
 
     // شريط التقدم
     const fill = $('#meterFill');
@@ -465,12 +516,15 @@
     // الصورة الصغيرة مع مربعات الرصد
     const thumb = $('#thumbFrame');
     $$('.box', thumb).forEach((b) => b.remove());
-    fillFrame(thumb, p.image);
+    // الصورة هنا صغيرة: نكتفي برقم المشكلة على المربع (01/02)،
+    // واسمها الكامل ظاهر كعنوان في البطاقة اللي بنفس الرقم
     p.problems.forEach((pr, i) => {
       const b = makeBox(pr, i);
       b.classList.add('is-on');
+      $('.box__label', b).innerHTML = `<span class="en">0${i + 1}</span>`;
       thumb.appendChild(b);
     });
+    fillFrame(thumb, p.image).then(() => fitLabels(thumb));
     $('#thumbCaption').textContent = `${p.title} · ${p.district}`;
 
     // البطاقتين
@@ -483,7 +537,7 @@
           <span class="sol-card__icon">${icon(pr.icon)}</span>
           <span class="sol-card__num en">0${i + 1}</span>
         </div>
-        <p class="sol-card__label">المشكلة</p>
+        <p class="sol-card__tag">${pr.label || 'المشكلة'}</p>
         <p class="sol-card__problem"></p>
         <div class="sol-card__solution">
           <p class="sol-card__label">الحل اللي أقترحه</p>
@@ -689,7 +743,7 @@
     const [pid, k] = key.split('-');
     const place = DATA.places.find((p) => p.id === pid);
     const pr = place && place.problems.find((x) => x.key === k);
-    return place && pr ? `${place.title} — ${pr.tag || pr.solution}` : key;
+    return place && pr ? `${place.title} — ${pr.label || pr.solution}` : key;
   }
 
   let adminOpen = false;

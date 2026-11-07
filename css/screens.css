@@ -242,18 +242,26 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 8px;
-  background: var(--c-glow);
+  background: var(--c-glow);           /* خلفية فاتحة ثابتة ونص كحلي: تباين عالي فوق أي صورة */
   color: var(--c-navy);
   font-family: var(--font-ar);
   font-weight: 700;
-  font-size: clamp(14px, 1.15vw, 18px);
-  line-height: 1.5;
+  font-size: clamp(16px, 1.4vw, 22px); /* 16px على الآيباد */
+  line-height: 1.45;
   white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(2, 6, 36, 0.45);
+  transition: transform 200ms var(--ease);
 }
-.box__label .en { font-weight: 700; opacity: 0.7; }
-.box--label-in .box__label { bottom: auto; top: 8px; inset-inline-start: 8px; }
+.box__label .en {
+  font-weight: 700;
+  opacity: 0.65;
+  padding-inline-end: 8px;
+  border-inline-end: 1px solid rgba(15, 21, 67, 0.3);
+}
+/* ما فيه مكان فوق المربع ← الاسم ينزل تحته (برضو برا المربع) */
+.box--label-below .box__label { bottom: auto; top: calc(100% + 8px); }
 
 /* =========================================================
    [3] الذكاء الاصطناعي يحلل الصورة
@@ -508,7 +516,23 @@
 .sol-side .stage { flex: none; height: 52%; place-items: start center; }
 .sol-side .frame { border-radius: var(--radius-sm); }
 .sol-side .box { opacity: 1; transform: none; }
-.sol-side .box__label { font-size: 13px; padding: 2px 8px; }
+.sol-side .box__label { font-size: 13px; padding: 2px 8px; gap: 6px; box-shadow: none; }
+.sol-side .box__label .en { padding-inline-end: 0; border: 0; opacity: 1; }
+/* اسم المشكلة المختصر: عنوان صغير فوق وصف المشكلة */
+.sol-card__tag {
+  margin: 0;
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(212, 218, 250, 0.14);
+  border: 1px solid rgba(212, 218, 250, 0.35);
+  color: var(--c-glow);
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
 .sol-side .box.is-dim { opacity: 0.25; }
 .sol-side .box.is-linked {
   border-color: var(--c-white);
